@@ -3,7 +3,7 @@ package hifive;
 public class Completed extends AbstractEvent {
 
     private Long id;
-    private Integer roomnumber;
+    private Long roomnumber;
 
     public Completed(){
         super();
@@ -16,11 +16,11 @@ public class Completed extends AbstractEvent {
     public void setId(Long id) {
         this.id = id;
     }
-    public Integer getRoomnumber() {
+    public Long getRoomnumber() {
         return roomnumber;
     }
 
-    public void setRoomnumber(Integer roomnumber) {
+    public void setRoomnumber(Long roomnumber) {
         this.roomnumber = roomnumber;
     }
 }

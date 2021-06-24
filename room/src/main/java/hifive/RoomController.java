@@ -9,15 +9,15 @@ import java.util.List;
 
  @RestController
  public class RoomController {
-
   @Autowired
   RoomRepository roomRepository;
 
   @PostMapping("/addroom")
   public String addroom(Room room)
   {
-      room.setRoomStatus("OK");
-      roomRepository.save(room);
-      return "OK";
+   room.setRoomStatus("OK");
+   roomRepository.save(room);
+   return "OK";
   }
+
  }
