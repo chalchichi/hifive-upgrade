@@ -24,7 +24,7 @@ public class CleanController {
      room.setRoomNumber(roomnumber);
      String isadded = roomService.roomAdd(room);
      try {
-         Thread.sleep(3000);
+         Thread.sleep(400);
      } catch (InterruptedException e) {
          e.printStackTrace();
      }
