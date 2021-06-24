@@ -31,17 +31,6 @@ public class PolicyHandler{
         //카톡전송(" 회의실 신청 취소 완료 : " + assigned.toString(), assigned.getConferenceId());
             
     }
-    @StreamListener(KafkaProcessor.INPUT)
-    public void wheneverCompleted_SendAlarm(@Payload Completed Completed){
-
-        if(!Completed.validate()) return;
-
-        System.out.println("\n\n##### listener SendAlarm : " + Completed.toJson() + "\n\n");
-
-        // Sample Logic //
-
-    }
-
 
     @StreamListener(KafkaProcessor.INPUT)
     public void whatever(@Payload String eventString){}

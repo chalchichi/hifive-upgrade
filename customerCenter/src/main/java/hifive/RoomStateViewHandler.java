@@ -103,4 +103,28 @@ public class RoomStateViewHandler {
         }
     }
 
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverCompleted_SendAlarm(@Payload Completed Completed){
+
+        if(!Completed.validate()) return;
+
+        try {
+            if (Completed.validate()) {
+                // view 객체 조회
+                List<RoomState> roomStateList = roomStateRepository.findByRoomNumber(Completed.getRoomnumber());
+                for(RoomState roomState : roomStateList){
+                    // view 객체에 이벤트의 eventDirectValue 를 set 함
+                    // view 레파지 토리에 save
+//                    roomState.setId(paid.getPayId());
+                    roomStateRepository.save(roomState);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        System.out.println("\n\n##### listener SendAlarm : " + Completed.toJson() + "\n\n");
+
+        // Sample Logic //
+
+    }
 }
