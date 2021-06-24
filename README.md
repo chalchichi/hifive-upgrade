@@ -724,18 +724,20 @@ public interface RoomService {
 ![스크린샷 2021-06-25 오전 12 08 58](https://user-images.githubusercontent.com/40500484/123288196-4cef9d00-d54a-11eb-994c-07727c2d3dd3.png)
 
 ## Zero-downtime deploy (Readiness Probe)
-- Room 서비스에 kubectl apply -f deployment_non_readiness.yml 을 통해 readiness Probe 옵션을 제거하고 컨테이너 상태 실시간 확인
-![non_de](https://user-images.githubusercontent.com/47212652/121105020-32c17980-c83e-11eb-8e10-c27ee89a369d.PNG)
+- 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscaler 이나 CB 설정을 제거함
+- seige 로 배포작업 직전에 워크로드를 모니터링 함.
+- 0.1 버전의 도커 이미지를 만듦
+- kubectl set image deployment.apps/clean clean=skccuser15.azurecr.io/clean:0.1 을 통해 Latest-> 0.1 버전으로 이미지 변경
+- 재배포시 Availability 가 평소 100%에서 70% 대로 떨어지는 것을 확인. 원인은 쿠버네티스가 성급하게 새로 올려진 서비스를 READY 상태로 인식하여 서비스 유입을 진행한 것이기 때문. 이를 막기위해 Readiness Probe 를 설정함
 
-- Room 서비스에 kubectl apply -f deployment.yml 을 통해 readiness Probe 옵션 적용
-- readinessProbe 옵션 추가  
-    > initialDelaySeconds: 10  
-    > timeoutSeconds: 2  
-    > periodSeconds: 5  
-    > failureThreshold: 10  
+  ![스크린샷 2021-06-25 오전 2 30 08](https://user-images.githubusercontent.com/40500484/123307308-4d456380-d55d-11eb-93d8-f9711fa15c61.png)
 
-- 컨테이너 상태 실시간 확인
-![dep](https://user-images.githubusercontent.com/47212652/121105025-33f2a680-c83e-11eb-9db0-ee2206a966fe.PNG)
+- Clean 서비스에 kubectl apply -f deployment.yml 을 통해 readiness Probe 옵션 적용
+
+  ![스크린샷 2021-06-25 오전 2 36 13](https://user-images.githubusercontent.com/40500484/123308041-276c8e80-d55e-11eb-8eed-40af50f81cfa.png)
+
+- Readiness가 적용됨에 따라 이미지를 버전을 Latest <-> 0.1 로 바꾸어도 없이 99.98% 응답률을 보인다.
+  <img width="352" alt="스크린샷 2021-06-25 오전 2 43 52" src="https://user-images.githubusercontent.com/40500484/123308943-44559180-d55f-11eb-92c5-30dbaf4e22ab.png">
 
 ## Self-healing (Liveness Probe)
 - Pay 서비스에 kubectl apply -f deployment.yml 을 통해 liveness Probe 옵션 적용
