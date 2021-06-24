@@ -25,6 +25,14 @@ spec:
                 configMapKeyRef:
                   name: apiurl
                   key: configurl
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
           livenessProbe:
             httpGet:
               path: '/actuator/health'
