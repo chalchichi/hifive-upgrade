@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.Date;
 
-@FeignClient(name="room", url="${api.url.pay}")
+@FeignClient(name="room", url="${api.url.room}")
 public interface RoomService {
     @RequestMapping(method= RequestMethod.POST, path="/rooms/addroom")
     public String roomAdd(@RequestBody Room room);
