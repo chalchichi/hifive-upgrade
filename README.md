@@ -422,56 +422,52 @@ server:
 
 ## 동기식 호출 과 Fallback 처리
 
-분석단계에서의 조건 중 하나로 Conference -> Pay 간의 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다. 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어있는 REST 서비스를 FeignClient 를 이용하여 호출하도록 한다. 
+분석단계에서의 조건 중 하나로 Room -> Clean 간의 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다. Room의 MVC Controller에 존재하는 REST 서비스를 FeignClient 를 이용하여 호출하도록 한다. 
 
-- 결제서비스를 호출하기 위하여 Stub과 (FeignClient) 를 이용하여 Service 대행 인터페이스 (Proxy) 를 구현 
+- 회의실 추가 서비스를 호출하기 위하여 Stub과 (FeignClient) 를 이용하여 Service 대행 인터페이스 (Proxy) 를 구현 
 
-> Pay 서비스의 external\PayService.java
+> Clean 서비스의 RoomService.java
 
 ```java
-package hifive.external;
+package hifive;
 
-@FeignClient(name="pay", url="http://pay:8080")
-public interface PayService {
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
-    @RequestMapping(method= RequestMethod.GET, path="/pays/paid")
-    public Map<String,String> paid(@RequestParam("status") String status, @RequestParam("conferenceId") Long conferenceId, @RequestParam("roomNumber") Long roomNumber);
+import java.util.Date;
+
+@FeignClient(name="room", url="http://localhost:8083")
+public interface RoomService {
+    @RequestMapping(method= RequestMethod.POST, path="/rooms/addroom")
+    public String roomAdd(@RequestBody Room room);
+
 }
 ```
 
-- 예약을 받은 직후(@PostPersist) 결제를 요청하도록 처리
+- 추가가 요청된 회의실에 대해서 실제 추가가 요청하도록 처리
 
-> Conference 서비스의 Conference.java (Entity)
+> Room 서비스의 RoomContorl.java (Controller)
 
 ```java
-    @PostPersist //해당 엔티티를 저장한 후
-    public void onPostPersist(){
-    
-        setStatus("CREATED");
-        Applied applied = new Applied();
-        //BeanUtils.copyProperties는 원본객체의 필드 값을 타겟 객체의 필드값으로 복사하는 유틸인데, 필드이름과 타입이 동일해야함.
-        applied.setConferenceId(this.getConferenceId());
-        applied.setConferenceStatus(this.getStatus());
-        applied.setRoomNumber(this.getRoomNumber());
-        applied.publishAfterCommit();
-        //신청내역이 카프카에 올라감
-        try {
-            // 결제 서비스 Request
-            Map<String, String> res = ConferenceApplication.applicationContext
-                    .getBean(hifive.external.PayService.class)
-                    .paid(applied);
-            //결제 아이디가 있고, 결제 상태로 돌아온 경우 회의 상태로 결제로 바꾼다.
-            if (res.get("status").equals("Req_complete")) {
-                this.setStatus("Req complete");
-            }
-            this.setPayId(Long.valueOf(res.get("payid")));
-            ConferenceApplication.applicationContext.getBean(javax.persistence.EntityManager.class).flush();
-            return;
-        }
-        catch (Exception e) {
-            System.out.println(e);
-        }
-    }
+package hifive;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import java.util.Date;
+
+@FeignClient(name="room", url="http://localhost:8083")
+public interface RoomService {
+    @RequestMapping(method= RequestMethod.POST, path="/rooms/addroom")
+    public String roomAdd(@RequestBody Room room);
+
+}
 ```
 
 - 동기식 호출에서는 호출 시간에 따른 타임 커플링이 발생하며, 결제 시스템이 장애가 나면 예약도 못받는다는 것을 확인:
@@ -481,132 +477,92 @@ public interface PayService {
 # 결제 (pay) 서비스를 잠시 내려놓음 (ctrl+c)
 
 # 결제 처리
-http post http://localhost:8081/conferences status="" payId=0 roomNumber=1   #Fail
-http post http://localhost:8081/conferences status="" payId=0 roomNumber=2   #Fail
+http GET http://localhost:8085/MakeRoom/10   #Fail
 ```
 > 결제 요청 오류 발생
-![Cap 2021-06-07 22-24-26-184](https://user-images.githubusercontent.com/80938080/121024411-28bc5e00-c7df-11eb-9a84-d3095683d49c.png)
+<img width="894" alt="스크린샷 2021-06-24 오후 8 03 06" src="https://user-images.githubusercontent.com/40500484/123252455-43087280-d527-11eb-996b-43fac5b4b6fd.png">
 ```
 #결제서비스 재기동
-cd pay
+cd room
 mvn spring-boot:run
 
 #주문처리
-http post http://localhost:8081/conferences status="" payId=0 roomNumber=1   #Success
+http GET http://localhost:8085/MakeRoom/10   #Success
 http post http://localhost:8081/conferences status="" payId=0 roomNumber=2   #Success
 ```
-
-- 또한 과도한 요청시에 서비스 장애가 도미노 처럼 벌어질 수 있다. (서킷브레이커, 폴백 처리는 운영단계에서 설명한다.)
+<img width="898" alt="스크린샷 2021-06-24 오후 8 05 22" src="https://user-images.githubusercontent.com/40500484/123252700-89f66800-d527-11eb-8ce7-1bc6e3bc75b6.png">
 
 
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
 
 
-결제가 이루어진 후에 회의실 관리(Room)로 이를 알려주는 행위는 동기식이 아니라 비동기식으로 처리하여 회의실 관리 서비스의 처리를 위하여 결제가 블로킹 되지 않아도록 처리한다.
+결제가 이루어진 후에 청소가 필요한 회의실 관리(Room)로 이를 알려주는 행위는 동기식이 아니라 비동기식으로 처리하여 회의실 관리 서비스의 처리를 위하여 결제가 블로킹 되지 않아도록 처리한다.
  
 - 이를 위하여 결제이력에 기록을 남긴 후에 곧바로 결제승인이 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
  
 ```java
-package hifive;
-
-import javax.persistence.*;
-import org.springframework.beans.BeanUtils;
-import java.util.List;
-import java.util.Date;
-
-@Entity
-@Table(name="Pay_table")
-public class Pay {
-
-    @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    private Long payId;
-    private String status;
-    private Long conferenceId;
-    private Long roomNumber;
-
     @PostPersist
-    public void onPostPersist(){
+    public void onPostPersist() {
 
-        if (this.getStatus() != "PAID") return;
+        System.out.println("\n\n##### RoomAssign PostPersist: " + this.getRoomStatus());
 
-        System.out.println("********************* Pay PostPersist Start. PayStatus=" + this.getStatus());
+        //예약 회의실 상태(roomStatus) == FULL
+        if (this.getRoomStatus().equals("FULL")) {
 
-        Paid paid = new Paid();
-        paid.setPayId(this.payId);
-        paid.setPayStatus(this.status);
-        paid.setConferenceId(this.conferenceId);
-        paid.setRoomNumber(this.roomNumber);
-        //BeanUtils.copyProperties(this, paid);
-        paid.publishAfterCommit();
-
-        try {
-            Thread.currentThread().sleep((long) (400 + Math.random() * 220));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            Assigned assignedRoom = new Assigned();
+            assignedRoom.setRoomNumber(this.getRoomNumber());
+            assignedRoom.setRoomStatus("ASSIGNED");
+            assignedRoom.setConferenceId(this.getConferenceId());
+            assignedRoom.setPayId(this.getPayId());
+            assignedRoom.publishAfterCommit();
         }
-
-        System.out.println(toString());
-        System.out.println("********************* Pay PostPersist End.");
     }
-
-}
 ```
 - 상점 서비스에서는 결제승인 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
 
 ```java
-package hifive;
-
 @Service
-public class PolicyHandler {
-    @Autowired
-    RoomRepository roomRepository;
+public class PolicyHandler{
+    @Autowired CleanRepository cleanRepository;
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void wheneverPaid_RoomAssign(@Payload Paid paid) {
+    public void wheneverAssigned_Assign(@Payload Assigned assigned){
+        SimpleDateFormat format1 = new SimpleDateFormat( "H");
 
-        if (!paid.validate()) {
-            System.out.println("##### listener RoomAssign Fail");
-            return;
-        } else {
-            System.out.println("\n\n##### listener RoomAssign : " + paid.toJson() + "\n\n");
-
-            //예약 신청한 방 번호 조회, 퇴실 개념이 없기 때문에 상태 검사 하지 않음
-            Optional<Room> optionalRoom = roomRepository.findById(paid.getRoomNumber());
-
-            Room room = optionalRoom.get();
-            room.setRoomStatus("FULL");
-            room.setUsedCount(room.getUsedCount() + 1);
-            room.setConferenceId(paid.getConferenceId());
-            room.setPayId(paid.getPayId());
-
-            System.out.println("##### 방배정 확인");
-            System.out.println("[ RoomStatus : " + room.getRoomStatus() + ", RoomNumber : " + room.getRoomNumber() + ", UsedCount : " + room.getUsedCount() + ", ConferenceId : " + room.getConferenceId() + "," + room.getPayId() + "]");
-            roomRepository.save(room);
-        }
+        String format_time1 = format1.format (System.currentTimeMillis());
+        if(!assigned.validate()) return;
+        Long roomNumber = assigned.getRoomNumber();
+        Clean clean = cleanRepository.findByRoomNumber(roomNumber);
+        clean.setIscleaned(false);
+        clean.setTime(Integer.parseInt(format_time1));
+        cleanRepository.save(clean);
+        System.out.println("\n\n##### listener Assign : " + assigned.toJson() + "\n\n");
     }
+
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whatever(@Payload String eventString){}
+
+
 }
 
 ```
 
 
-회의실 관리 시스템은 주문/결제와 완전히 분리되어있으며, 이벤트 수신에 따라 처리되기 때문에, 회의실 관리 시스템이 유지보수로 인해 잠시 내려간 상태라도 신청을 받는데 문제가 없다:
+회의실 청소 <-> 회의실 예약간의 이벤트는 수신에 따라 처리되기 때문에, 나머지 시스템이 유지보수로 인해 잠시 내려간 상태라도 신청을 받는데 문제가 없다:
 ```
-# 회의실 관리 시스템 (Room) 를 잠시 내려놓음 (ctrl+c)
 
-#신청 처리
-http post http://localhost:8081/conferences status="" payId=0 roomNumber=1   #Success
-http post http://localhost:8081/conferences status="" payId=0 roomNumber=2   #Success
+#청소 시스템 중단 상태에서 회의실 사용 처리
+<img width="898" alt="스크린샷 2021-06-24 오후 8 05 22" src="https://user-images.githubusercontent.com/40500484/123256752-47835a00-d52c-11eb-9dd8-0fb574367398.png"> 
 
-#신청 상태 확인
-http localhost:8080/conferences     # 신청 상태 안바뀜 확인
 
 #회의실 관리 서비스 기동
-cd room
-mvn spring-boot:run
+cd clean
+mvn spring-boot:Clean
 
-#신청 상태 확인
-http localhost:8080/conferences     # 모든 신청의 상태가 "할당됨"으로 확인
+#청소목록 추가 상태 확인
+![스크린샷 2021-06-24 오후 8 42 12](https://user-images.githubusercontent.com/40500484/123257110-b496ef80-d52c-11eb-8087-6558b1dd4d14.png)
+
 ```
 
 
@@ -619,27 +575,27 @@ http localhost:8080/conferences     # 모든 신청의 상태가 "할당됨"으�
 
 - git에서 소스 가져오기
 ```
-git clone https://github.com/jypark002/hifive.git
+git clone https://github.com/chalchichi/hifive-upgrade.git
 ```
 - Build 하기
 ```
 cd hifive
-cd conference
+cd clean
 mvn package
 ```
 - 도커라이징 : Azure 레지스트리에 도커 이미지 푸시하기
 ```
-az acr build --registry skccuser05 --image skccuser05.azurecr.io/conference:latest .
+az acr build --registry skccuser15 --image skccuser05.azurecr.io/clean:latest .
 ```
 - 컨테이너라이징 : 디플로이 생성 확인
 ```
-kubectl create deploy conference --image=skccuser05.azurecr.io/conference:latest
+kubectl create deploy clean --image=skccuser05.azurecr.io/clean:latest
 ```
 - 컨테이너라이징 : 서비스 생성
 ```
-kubectl expose deploy conference --port=8080
+kubectl expose deploy clean --port=8080
 ```
-> customerCenter, pay, room, gateway 서비스도 동일한 배포 작업 반복
+> conference, customerCenter, pay, room, gateway 서비스도 동일한 배포 작업 반복
 
 ## 동기식 호출 / 서킷 브레이킹 / 장애격리
 
