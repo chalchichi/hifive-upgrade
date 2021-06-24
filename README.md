@@ -603,8 +603,8 @@ kubectl expose deploy clean --port=8080
 ## 동기식 호출 / 서킷 브레이킹 / 장애격리
 
 - Spring FeignClient + Hystrix을 사용하여 서킷 브레이킹 구현
-- Hystrix 설정 : 결제 요청 쓰레드의 처리 시간이 410ms가 넘어서기 시작한 후 어느정도 지속되면 서킷 브레이커가 닫히도록 설정
-- 결제를 요청하는 Conference 서비스에서 Hystrix 설정
+- Hystrix 설정 : 결제 요청 쓰레드의 처리 시간이 610ms가 넘어서기 시작한 후 어느정도 지속되면 서킷 브레이커가 닫히도록 설정
+- 회의실을 추가하는 Clean 서비스에서 Hystrix 설정
 
 > Conference 서비스의 application.yml 파일
 ```yaml
@@ -620,38 +620,51 @@ hystrix:
 - 결제 서비스(pay)에서 임의 부하 처리 - 400 밀리에서 증감 220 밀리 정도 왔다갔다 하게
 > Pay 서비스의 Pay.java 파일
 ```java
-    @PostPersist
-    public void onPostPersist(){
-        if (this.getStatus() != "PAID") return;
-
-        Paid paid = new Paid();
-        paid.setPayId(this.payId);
-        paid.setPayStatus(this.status);
-        paid.setConferenceId(this.conferenceId);
-        paid.setRoomNumber(this.roomNumber);
-        paid.publishAfterCommit();
-
-        try {
-            Thread.currentThread().sleep((long) (400 + Math.random() * 220));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+ @GetMapping("/MakeRoom/{roomnumber}")
+ public List<Object> makeRoom(@PathVariable Long roomnumber)
+ {
+     Room room = new Room();
+     room.setRoomStatus("EMPTY");
+     room.setRoomNumber(roomnumber);
+     String isadded = roomService.roomAdd(room);
+     try {
+         Thread.currentThread().sleep((long) (400 + Math.random() * 220));
+     } catch (InterruptedException e) {
+         e.printStackTrace();
+     }
+     if(isadded.equals("OK"))
+     {
+         Clean clean = new Clean();
+         clean.setIscleaned(true);
+         clean.setRoomNumber(roomnumber);
+         cleanRepository.save(clean);
+         List<Object> res = new ArrayList<>();
+         res.add(room);
+         res.add(clean);
+         return res;
+     }
+     else
+     {
+         return null;
+     }
+ }
 ```
 
 - 부하테스터 siege 툴을 통한 서킷브레이커 동작 확인:
-    - 동시사용자 100명
+    - 동시사용자 300명
     - 60초 동안 실시
 
 ```
-siege -c100 -t60S -r10 -v --content-type "application/json" 'http://52.231.34.176:8080/conferences POST {"status":"", "payId":0, "roomNumber":1}'
+siege -c300 -t60S -r10 -v 'http://52.231.69.99:8080/MakeRoom/1'
 ```
-- 부하가 발생하고 서킷브레이커가 발동하여 요청 실패하였고, 밀린 부하가 다시 처리되면서 회의실 신청(Apply)를 받기 시작
-![Cap 2021-06-08 10-37-57-954](https://user-images.githubusercontent.com/80938080/121108974-a450f600-c845-11eb-94ed-621b894f0da1.png)
+- 부하가 발생하고 (610ms 이상이 지속적으로 발생) 서킷브레이커가 발동하여 요청 실패하였고, 밀린 부하가 다시 처리되면서 회의실 추가에 대해 요청하기 시작
 
+![스크린샷 2021-06-24 오후 10 29 08](https://user-images.githubusercontent.com/40500484/123272348-a0f38500-d53c-11eb-8494-be0b9337054d.png)
 
-- 운영 중인 시스템은 죽지 않고 지속적으로 서킷브레이커에 의하여 적절히 회로가 열림과 닫힘이 벌어지면서 자원을 보호하고 있음을 보여줌. 하지만, 47.10% 가 성공하였고, 53%가 실패했다는 것은 고객 사용성에 있어 좋지 않기 때문에 Retry 설정과 동적 Scale out (replica의 자동적 추가,HPA) 을 통하여 시스템을 확장 해주는 후속처리가 필요.
-![Cap 2021-06-08 10-39-01-129](https://user-images.githubusercontent.com/80938080/121109032-bdf23d80-c845-11eb-906b-9416924c6c1c.png)
+- 주기적으로 CB가 동작됨을 확인
+
+![스크린샷 2021-06-24 오후 10 41 02](https://user-images.githubusercontent.com/40500484/123273116-50c8f280-d53d-11eb-8926-30dfad6a65fa.png)
+
 
 
 ## 오토스케일아웃 (HPA)
