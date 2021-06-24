@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.Date;
 
-@FeignClient(name="room", url="http://localhost:8083")
+@FeignClient(name="room", url="http://room:8080")
 public interface RoomService {
     @RequestMapping(method= RequestMethod.POST, path="/rooms/addroom")
     public String roomAdd(@RequestBody Room room);
