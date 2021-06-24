@@ -12,8 +12,8 @@ import java.util.List;
   @Autowired
   RoomRepository roomRepository;
 
-  @PostMapping("/addroom")
-  public String addroom(Room room)
+  @PostMapping("/rooms/addroom")
+  public String addroom(@RequestBody Room room)
   {
    room.setRoomStatus("OK");
    roomRepository.save(room);
