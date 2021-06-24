@@ -11,6 +11,6 @@ import java.util.Date;
 @FeignClient(name="room", url="http://room:8080")
 public interface RoomService {
     @RequestMapping(method= RequestMethod.POST, path="/addroom")
-    public void roomAdd(@RequestBody Room room);
+    public String roomAdd(@RequestBody Room room);
 
 }
