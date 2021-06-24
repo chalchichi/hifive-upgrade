@@ -71,50 +71,40 @@
 
 # 분석/설계
 
-
-## AS-IS 조직 (Horizontally-Aligned)
-::TO-DO
-
-## TO-BE 조직 (Vertically-Aligned)
-::TO-DO
-
 ## Event Storming 결과
 * MSAEZ 모델링한 이벤트스토밍 결과:  http://www.msaez.io/#/storming/pYauKq27pAMMO4ZZcMLRDtjzgIv1/share/40d9c225e0f9826deff3b8035d97b38f
 
 
 ### 이벤트 도출
-::TO-DO
+![image](https://user-images.githubusercontent.com/81279673/120964712-b3309d80-c79e-11eb-9e12-03e968f6f7fd.png)
 
 ### 부적격 이벤트 탈락
-::TO-DO
+![image](https://user-images.githubusercontent.com/81279673/120964787-cfccd580-c79e-11eb-9746-08b844f44181.png)
 
-- 과정중 도출된 잘못된 도메인 이벤트들을 걸러내는 작업을 수행함
-- 주문시>메뉴카테고리선택됨, 주문시>메뉴검색됨 :  UI 의 이벤트이지, 업무적인 의미의 이벤트가 아니라서 제외
+    - 이벤트스토밍 과정 중 도출된 잘못된 도메인 이벤트들을 걸러내는 작업을 수행함
+    - 회의실 선택, 취소를 위한 신청건 선택, 결제버튼 선택, 결제버튼 선택은 UI이벤트이므로 대상에서 제외함
 
 ### 액터, 커맨드 부착하여 읽기 좋게
-::TO-DO
+![image](https://user-images.githubusercontent.com/81279673/120964860-effc9480-c79e-11eb-9858-89bf32d3ba2f.png)
 
 ### 어그리게잇으로 묶기
-::TO-DO
+![image](https://user-images.githubusercontent.com/81279673/120964886-f985fc80-c79e-11eb-837d-1302e29b4e9b.png)
 
-    - app의 Order, store 의 주문처리, 결제의 결제이력은 그와 연결된 command 와 event 들에 의하여 트랜잭션이 유지되어야 하는 단위로 그들 끼리 묶어줌
+    - 신청, 결제, 회의실 관리 어그리게잇을 생성하고 그와 연결된 command와 event들에 의하여 트랜잭션이 유지되어야 하는 단위로 묶어줌
 
 ### 바운디드 컨텍스트로 묶기
-::TO-DO
-
+![image](https://user-images.githubusercontent.com/81279673/120964904-07d41880-c79f-11eb-9049-88d11fa059a3.png)
 
     - 도메인 서열 분리 
-        - Core Domain:  app(front), store : 없어서는 안될 핵심 서비스이며, 연견 Up-time SLA 수준을 99.999% 목표, 배포주기는 app 의 경우 1주일 1회 미만, store 의 경우 1개월 1회 미만
-        - Supporting Domain:   marketing, customer : 경쟁력을 내기위한 서비스이며, SLA 수준은 연간 60% 이상 uptime 목표, 배포주기는 각 팀의 자율이나 표준 스프린트 주기가 1주일 이므로 1주일 1회 이상을 기준으로 함.
+        - Core Domain:  conference, room : 없어서는 안될 핵심 서비스이며, 연견 Up-time SLA 수준을 99.999% 목표, 배포주기는 conference 의 경우 1주일 1회 미만, room 의 경우 1개월 1회 미만
+        - Supporting Domain:   customer center : 경쟁력을 내기위한 서비스이며, SLA 수준은 연간 60% 이상 uptime 목표, 배포주기는 각 팀의 자율이나 표준 스프린트 주기가 1주일 이므로 1주일 1회 이상을 기준으로 함.
         - General Domain:   pay : 결제서비스로 3rd Party 외부 서비스를 사용하는 것이 경쟁력이 높음 (핑크색으로 이후 전환할 예정)
 
 ### 폴리시 부착 (괄호는 수행주체, 폴리시 부착을 둘째단계에서 해놔도 상관 없음. 전체 연계가 초기에 드러남)
-
-::TO-DO
+![image](https://user-images.githubusercontent.com/81279673/120964924-11f61700-c79f-11eb-9b3a-10cdf6ed50e4.png)
 
 ### 폴리시의 이동과 컨텍스트 매핑 (점선은 Pub/Sub, 실선은 Req/Resp)
-
-::TO-DO
+![image](https://user-images.githubusercontent.com/81279673/120964957-1c181580-c79f-11eb-8f31-00dd15712190.png)
 
 ### 완성된 1차 모형
 ![eventstormin-1차](https://user-images.githubusercontent.com/80938080/119836974-246d8680-bf3d-11eb-86ab-01f6102a8778.png)
@@ -349,8 +339,11 @@ http GET http://localhost:8085/complete/{roomnumber}"
 # 회의실 상태 확인
 http GET http://localhost:8084/roomStates
 ```
-> 청소시스템에서 회의실 추가 후 Clean 동작 결과
+
+
+- 청소시스템에서 회의실 추가 후 Clean 동작 결과
 <img width="889" alt="스크린샷 2021-06-24 오후 6 06 21" src="https://user-images.githubusercontent.com/40500484/123235516-e8ffb100-d516-11eb-9d2a-8d0dfe605c95.png">
+
 
 ## CQRS
 
@@ -391,19 +384,27 @@ spring:
         - id: conference
           uri: http://conference:8080
           predicates:
-            - Path=/conferences/** 
+            - Path=/conferences/**
         - id: pay
           uri: http://pay:8080
           predicates:
-            - Path=/pays/** 
+            - Path=/pays/**
         - id: room
           uri: http://room:8080
           predicates:
-            - Path=/rooms/** 
+            - Path=/rooms/**
         - id: customerCenter
           uri: http://customerCenter:8080
           predicates:
             - Path= /roomStates/**
+        - id: clean
+          uri: http://clean:8080
+          predicates:
+            - - Path=/MakeRoom/**
+        - id: clean2
+          uri: http://clean:8080
+          predicates:
+            - - Path=/complete/**
       globalcors:
         corsConfigurations:
           '[/**]':
