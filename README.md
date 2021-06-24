@@ -703,6 +703,7 @@ kubectl create configmap apiurl --from-literal=configurl=http://room:8080
 - 설정된 ConfigMap 정보 가져오기
 ```
 kubectl get configmap apiurl -o yaml
+
 ```
 <img width="523" alt="스크린샷 2021-06-25 오전 12 12 24" src="https://user-images.githubusercontent.com/40500484/123288070-321d2880-d54a-11eb-8222-3a6329241818.png">
 
@@ -710,7 +711,12 @@ kubectl get configmap apiurl -o yaml
 
 ![스크린샷 2021-06-25 오전 12 08 01](https://user-images.githubusercontent.com/40500484/123288126-3ea18100-d54a-11eb-9b18-56cf24b4d118.png)
 
-![스크린샷 2021-06-25 오전 12 08 17](https://user-images.githubusercontent.com/40500484/123288157-43663500-d54a-11eb-9cf8-be51e5568b9e.png)
+```java
+@FeignClient(name="room", url="${api.url.room}")
+public interface RoomService {
+    @RequestMapping(method= RequestMethod.POST, path="/rooms/addroom")
+    public String roomAdd(@RequestBody Room room);
+```
 
 -정상동작 확인
 
