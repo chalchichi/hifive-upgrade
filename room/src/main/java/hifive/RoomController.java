@@ -20,4 +20,10 @@ import java.util.List;
    return "OK";
   }
 
+  @PostMapping("/Assigned_room")
+  public Room test_Assigned(@RequestBody Room room)
+  {
+      roomRepository.save(room);
+      return room;
+  }
  }

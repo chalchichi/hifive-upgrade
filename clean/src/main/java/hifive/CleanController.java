@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -16,16 +17,27 @@ public class CleanController {
  @Autowired
  CleanRepository cleanRepository;
  @GetMapping("/MakeRoom/{roomnumber}")
- public String makeRoom(@PathVariable Long roomnumber)
+ public List<Object> makeRoom(@PathVariable Long roomnumber)
  {
      Room room = new Room();
+     room.setRoomStatus("EMPTY");
      room.setRoomNumber(roomnumber);
-     roomService.roomAdd(room);
-     Clean clean = new Clean();
-     clean.setIscleaned(true);
-     clean.setRoomNumber(roomnumber);
-     cleanRepository.save(clean);
-     return "OK";
+     String isadded = roomService.roomAdd(room);
+     if(isadded.equals("OK"))
+     {
+         Clean clean = new Clean();
+         clean.setIscleaned(true);
+         clean.setRoomNumber(roomnumber);
+         cleanRepository.save(clean);
+         List<Object> res = new ArrayList<>();
+         res.add(room);
+         res.add(clean);
+         return res;
+     }
+     else
+     {
+         return null;
+     }
  }
 
     @GetMapping("/complete/{roomnumber}")
