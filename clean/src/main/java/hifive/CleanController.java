@@ -24,11 +24,6 @@ public class CleanController {
      room.setRoomStatus("EMPTY");
      room.setRoomNumber(roomnumber);
      String isadded = roomService.roomAdd(room);
-     try {
-         Thread.currentThread().sleep((long) (400 + Math.random() * 220));
-     } catch (InterruptedException e) {
-         e.printStackTrace();
-     }
      if(isadded.equals("OK"))
      {
          Clean clean = new Clean();
