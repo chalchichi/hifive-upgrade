@@ -664,24 +664,25 @@ siege -c300 -t60S -r10 -v 'http://52.231.69.99:8080/MakeRoom/1'
 ## 오토스케일아웃 (HPA)
 앞서 서킷브레이커는 시스템을 안정되게 운영할 수 있게 해줬지만 사용자의 요청을 100% 받아들여주지 못했기 때문에 이에 대한 보완책으로 자동화된 확장 기능을 적용하고자 한다. 
 
-- conference의 deployment.yaml 파일 설정
+- clean deployment.yaml 파일 설정
 
-<img width="400" alt="야믈" src="https://user-images.githubusercontent.com/80210609/121058380-3b449080-c7fb-11eb-92ab-20852519d9d9.PNG">
+![스크린샷 2021-06-24 오후 11 46 43](https://user-images.githubusercontent.com/40500484/123283576-7eff0000-d546-11eb-9b07-4f573c4e938f.png)
 
-- 신청서비스에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다. 설정은 CPU 사용량이 15프로를 넘어서면 replica 를 10개까지 늘려준다:
+- 청소서비스에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다. 설정은 CPU 사용량이 3프로를 넘어서면 replica 를 10개까지 늘려준다:
 
 ```
-kubectl autoscale deploy confenrence --min=1 --max=10 --cpu-percent=15
+kubectl autoscale deploy clean --min=1 --max=10 --cpu-percent=3
 ```
 
 - hpa 설정 확인
 
-<img width="600" alt="스케일-hpa" src="https://user-images.githubusercontent.com/80210609/121057419-37fcd500-c7fa-11eb-81ff-8d5062a219b4.PNG">
+![스크린샷 2021-06-24 오후 11 53 48](https://user-images.githubusercontent.com/40500484/123284882-8ffc4100-d547-11eb-907a-5d7acb85a3e6.png)
 
 
-- CB 에서 했던 방식대로 워크로드를 1분 동안 걸어준다.
+
+- siege를 -c200 -t120S -r10 로 걸어준다.
 ```
-siege -c100 -t60S -r10 -v --content-type "application/json" 'http://conference:8080/conferences POST {"roomNumber": "123"}'
+siege -c150 -t120S -r10 -v  'http://52.231.69.99:8080/MakeRoom/1'
 ```
 - 오토스케일이 어떻게 되고 있는지 모니터링을 걸어둔다:
 ```
@@ -689,11 +690,8 @@ kubectl get deploy conference -w
 ```
 
 - 어느정도 시간이 흐른 후 스케일 아웃이 벌어지는 것을 확인할 수 있다:
-<img width="700" alt="스케일최종" src="https://user-images.githubusercontent.com/80210609/121056827-937a9300-c7f9-11eb-9ebc-ca86c271d3c3.PNG">
 
-- siege 의 로그를 보아도 전체적인 성공률이 높아진 것을 확인 할 수 있다. 
-<img width="600" alt="상태" src="https://user-images.githubusercontent.com/80210609/121057028-cde43000-c7f9-11eb-88d2-c022dddca49f.PNG">
-  
+<img width="348" alt="스크린샷 2021-06-24 오후 11 48 22" src="https://user-images.githubusercontent.com/40500484/123284074-ecab2c00-d546-11eb-956c-464ddc4160c4.png">
 
 ## ConfigMap
 - 환경정보로 변경 시 ConfigMap으로 설정함
