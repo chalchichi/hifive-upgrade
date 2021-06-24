@@ -16,9 +16,15 @@ spec:
     spec:
       containers:
         - name: clean
-          image: username/clean:latest
+          image: skccuser15.azurecr.io/clean:latest
           ports:
             - containerPort: 8080
+          env:
+            - name: configurl
+              valueFrom:
+                configMapKeyRef:
+                  name: apiurl
+                  key: configurl
           readinessProbe:
             httpGet:
               path: '/actuator/health'
