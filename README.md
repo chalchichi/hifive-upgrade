@@ -707,7 +707,7 @@ kubectl get configmap apiurl -o yaml
 ```
 <img width="523" alt="스크린샷 2021-06-25 오전 12 12 24" src="https://user-images.githubusercontent.com/40500484/123288070-321d2880-d54a-11eb-8222-3a6329241818.png">
 
-- 관련된 프로그램(application.yaml, roomService.java) 적용
+- 관련된 프로그램(application.yaml, roomService.java ,deployment.yml) 적용
 
 ![스크린샷 2021-06-25 오전 12 08 01](https://user-images.githubusercontent.com/40500484/123288126-3ea18100-d54a-11eb-9b18-56cf24b4d118.png)
 
@@ -717,8 +717,9 @@ public interface RoomService {
     @RequestMapping(method= RequestMethod.POST, path="/rooms/addroom")
     public String roomAdd(@RequestBody Room room);
 ```
+![스크린샷 2021-06-25 오전 1 56 03](https://user-images.githubusercontent.com/40500484/123303469-cb533b80-d558-11eb-96dd-7f3a74dfd20b.png)
 
--정상동작 확인
+-deployment.yml 적용후 정상동작 확인
 
 ![스크린샷 2021-06-25 오전 12 08 58](https://user-images.githubusercontent.com/40500484/123288196-4cef9d00-d54a-11eb-994c-07727c2d3dd3.png)
 
