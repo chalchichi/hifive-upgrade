@@ -740,30 +740,25 @@ public interface RoomService {
   <img width="352" alt="스크린샷 2021-06-25 오전 2 43 52" src="https://user-images.githubusercontent.com/40500484/123308943-44559180-d55f-11eb-92c5-30dbaf4e22ab.png">
 
 ## Self-healing (Liveness Probe)
-- Pay 서비스에 kubectl apply -f deployment.yml 을 통해 liveness Probe 옵션 적용
+- Clean 서비스에 kubectl apply -f deployment.yml 을 통해 liveness Probe 옵션 적용
 
 - liveness probe 옵션을 추가
-- initialDelaySeconds: 10
-- timeoutSeconds: 2
-- periodSeconds: 5
-- failureThreshold: 5
                  
   ![스크린샷 2021-06-08 오후 2 16 45](https://user-images.githubusercontent.com/40500484/121127061-2cde8f00-c864-11eb-8b4f-7d3abcba60b3.png)
 
 
-- Pay 서비스에 liveness가 적용된 것을 확인
+- Clean 서비스에 liveness가 적용된 것을 확인
 
-- Http Get Pay/live를 통해서 컨테이너 상태 실시간 확인 및 재시동 
-
-  
-  ![스크린샷 2021-06-07 오후 9 45 31](https://user-images.githubusercontent.com/40500484/121018788-c9a81a80-c7d9-11eb-9013-1a68ccf1a9b1.png)
+  ![스크린샷 2021-06-25 오전 2 53 22](https://user-images.githubusercontent.com/40500484/123309955-8501da80-d560-11eb-86c2-0798a2472057.png)
 
 
 - Liveness test를 위해 port : 8090으로 변경
+
 - Delay time 등 옵션도 작게 변경
+
+  ![스크린샷 2021-06-25 오전 2 54 08](https://user-images.githubusercontent.com/40500484/123310042-a06ce580-d560-11eb-827b-7104413a46b8.png)
   
-  ![스크린샷 2021-06-08 오후 1 59 29](https://user-images.githubusercontent.com/40500484/121125804-1cc5b000-c862-11eb-8d5d-34b5a0ba1df2.png)
 
 - Liveness 적용된 Pay 서비스 , 응답불가로 인한 restart 동작 확인
 
-  ![스크린샷 2021-06-08 오후 1 59 15](https://user-images.githubusercontent.com/40500484/121125928-50083f00-c862-11eb-91dd-c47a74eade37.png)
+  ![스크린샷 2021-06-25 오전 2 57 00](https://user-images.githubusercontent.com/40500484/123310422-05c0d680-d561-11eb-9958-a675cdda5d4d.png)
