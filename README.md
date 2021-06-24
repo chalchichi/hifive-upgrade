@@ -473,20 +473,23 @@ public interface RoomService {
 - 동기식 호출에서는 호출 시간에 따른 타임 커플링이 발생하며, 결제 시스템이 장애가 나면 예약도 못받는다는 것을 확인:
 
 
+```
+# 결제 (pay) 서비스를 잠시 내려놓음 (ctrl+c)
 
-- 회의실 생성처리
+# 결제 처리
 http GET http://localhost:8085/MakeRoom/10   #Fail
-
+```
+> 결제 요청 오류 발생
 <img width="894" alt="스크린샷 2021-06-24 오후 8 03 06" src="https://user-images.githubusercontent.com/40500484/123252455-43087280-d527-11eb-996b-43fac5b4b6fd.png">
-
-#회의실 서비스 재기동
+```
+#결제서비스 재기동
 cd room
 mvn spring-boot:run
 
 #주문처리
 http GET http://localhost:8085/MakeRoom/10   #Success
 http post http://localhost:8081/conferences status="" payId=0 roomNumber=2   #Success
-
+```
 <img width="898" alt="스크린샷 2021-06-24 오후 8 05 22" src="https://user-images.githubusercontent.com/40500484/123252700-89f66800-d527-11eb-8ce7-1bc6e3bc75b6.png">
 
 
@@ -547,20 +550,23 @@ public class PolicyHandler{
 
 
 회의실 청소 <-> 회의실 예약간의 이벤트는 수신에 따라 처리되기 때문에, 나머지 시스템이 유지보수로 인해 잠시 내려간 상태라도 신청을 받는데 문제가 없다:
-```
+
 
 #청소 시스템 중단 상태에서 회의실 사용 처리
+
 <img width="898" alt="스크린샷 2021-06-24 오후 8 05 22" src="https://user-images.githubusercontent.com/40500484/123256752-47835a00-d52c-11eb-9dd8-0fb574367398.png"> 
 
 
 #회의실 관리 서비스 기동
+
 cd clean
 mvn spring-boot:Clean
 
 #청소목록 추가 상태 확인
+
 ![스크린샷 2021-06-24 오후 8 42 12](https://user-images.githubusercontent.com/40500484/123257110-b496ef80-d52c-11eb-8087-6558b1dd4d14.png)
 
-```
+
 
 
 # 운영
