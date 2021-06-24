@@ -16,7 +16,7 @@ public class CleanController {
  @Autowired
  CleanRepository cleanRepository;
  @GetMapping("/MakeRoom/{roomnumber}")
- public void makeRoom(@PathVariable Long roomnumber)
+ public String makeRoom(@PathVariable Long roomnumber)
  {
      Room room = new Room();
      room.setRoomNumber(roomnumber);
@@ -25,10 +25,11 @@ public class CleanController {
      clean.setIscleaned(true);
      clean.setRoomNumber(roomnumber);
      cleanRepository.save(clean);
+     return "OK";
  }
 
     @GetMapping("/complete/{roomnumber}")
-    public void completeRoom(@PathVariable Long roomnumber)
+    public String completeRoom(@PathVariable Long roomnumber)
     {
         Clean clean = cleanRepository.findByRoomNumber(roomnumber);
         clean.setTime(null);
@@ -37,5 +38,6 @@ public class CleanController {
         completed.setRoomnumber(roomnumber);
         completed.publish();
         cleanRepository.save(clean);
+        return "OK";
     }
 }
