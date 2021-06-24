@@ -27,7 +27,11 @@ spring:
         - id: clean
           uri: http://localhost:8085
           predicates:
-            - Path=/cleans/**
+            - - Path=/MakeRoom/**
+        - id: clean2
+          uri: http://localhost:8085
+          predicates:
+            - - Path=/complete/**
       globalcors:
         corsConfigurations:
           '[/**]':
