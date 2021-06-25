@@ -31,11 +31,6 @@ public class CleanController {
          clean.setIscleaned(true);
          clean.setRoomNumber(roomnumber);
          cleanRepository.save(clean);
-         try {
-             Thread.currentThread().sleep((long) (400 + Math.random() * 220));
-         } catch (InterruptedException e) {
-             e.printStackTrace();
-         }
          Made made = new Made();
          made.setRoomNumber(roomnumber);
          made.setEventType("Create");
