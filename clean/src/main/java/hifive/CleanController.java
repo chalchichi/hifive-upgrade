@@ -42,6 +42,7 @@ public class CleanController {
          SimpleDateFormat format1 = new SimpleDateFormat( "HH:mm:ss");
          String format_time1 = format1.format (System.currentTimeMillis());
          made.setTimestamp(format_time1);
+         made.publish();
          List<Object> res = new ArrayList<>();
          res.add(room);
          res.add(clean);
@@ -74,6 +75,7 @@ public class CleanController {
         Made made = new Made();
         made.setRoomNumber(roomnumber);
         made.setEventType("Delete");
+        made.publish();
         return "OK";
     }
 }
