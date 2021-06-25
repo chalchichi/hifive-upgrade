@@ -679,7 +679,7 @@ kubectl autoscale deploy clean --min=1 --max=10 --cpu-percent=3
 
 
 
-- siege를 -c200 -t120S -r10 로 걸어준다.
+- siege를 -c150 -t120S -r10 로 걸어준다.
 ```
 siege -c150 -t120S -r10 -v  'http://52.231.69.99:8080/MakeRoom/1'
 ```
