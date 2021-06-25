@@ -67,7 +67,7 @@ public class CleanController {
         return "OK";
     }
 
-    @DeleteMapping("/complete/{roomnumber}")
+    @DeleteMapping("/MakeRoom/{roomnumber}")
     public String DeleteRoom(@PathVariable Long roomnumber)
     {
         Clean clean = cleanRepository.findByRoomNumber(roomnumber);
