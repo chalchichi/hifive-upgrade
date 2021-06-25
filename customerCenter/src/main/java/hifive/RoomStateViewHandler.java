@@ -127,4 +127,37 @@ public class RoomStateViewHandler {
         // Sample Logic //
 
     }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverClean_SendAlarm(@Payload Made made){
+
+        if(!made.validate()) return;
+
+        try {
+            if (made.validate()) {
+                // view 객체 조회
+                if(made.getEventType().equals("Create"))
+                {
+                    RoomState roomState = new RoomState();
+                    roomState.setRoomStatus("EMPTY");
+                    roomState.setRoomNumber(made.getRoomNumber());
+                    roomStateRepository.save(roomState);
+                }
+                else
+                {
+                 List<RoomState> roomStates = roomStateRepository.findByRoomNumber(made.getRoomNumber());
+                 for(RoomState roomState : roomStates)
+                 {
+                     roomStateRepository.delete(roomState);
+                 }
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        System.out.println("\n\n##### listener SendAlarm : " + Completed.toJson() + "\n\n");
+
+        // Sample Logic //
+
+    }
 }

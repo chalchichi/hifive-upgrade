@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +36,12 @@ public class CleanController {
          } catch (InterruptedException e) {
              e.printStackTrace();
          }
+         Made made = new Made();
+         made.setRoomNumber(roomnumber);
+         made.setEventType("Create");
+         SimpleDateFormat format1 = new SimpleDateFormat( "HH:mm:ss");
+         String format_time1 = format1.format (System.currentTimeMillis());
+         made.setTimestamp(format_time1);
          List<Object> res = new ArrayList<>();
          res.add(room);
          res.add(clean);
@@ -56,6 +63,17 @@ public class CleanController {
         completed.setRoomnumber(roomnumber);
         completed.publish();
         cleanRepository.save(clean);
+        return "OK";
+    }
+
+    @DeleteMapping("/complete/{roomnumber}")
+    public String DeleteRoom(@PathVariable Long roomnumber)
+    {
+        Clean clean = cleanRepository.findByRoomNumber(roomnumber);
+        cleanRepository.delete(clean);
+        Made made = new Made();
+        made.setRoomNumber(roomnumber);
+        made.setEventType("Delete");
         return "OK";
     }
 }
