@@ -482,7 +482,6 @@ mvn spring-boot:run
 
 - 주문처리
 http GET http://localhost:8085/MakeRoom/10   #Success
-http post http://localhost:8081/conferences status="" payId=0 roomNumber=2   #Success
 
 <img width="898" alt="스크린샷 2021-06-24 오후 8 05 22" src="https://user-images.githubusercontent.com/40500484/123252700-89f66800-d527-11eb-8ce7-1bc6e3bc75b6.png">
 
